@@ -31,7 +31,7 @@
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
 
-#include "Adafruit_NeoPixel.h"
+#include "Adafruit_NeoPixel-ANDnXOR.h"
 
 Adafruit_NeoPixel::Adafruit_NeoPixel(uint16_t n, uint8_t p, uint8_t t) : numLEDs(n), numBytes(n * 3), pin(p), type(t), pixels(NULL)
 #ifdef __AVR__
@@ -87,10 +87,11 @@ void Adafruit_NeoPixel::show(void) {
 
   noInterrupts(); // Need 100% focus on instruction timing
 
-  #define DELAY_800_T0H  2
-  #define DELAY_800_T0L  5
-  #define DELAY_800_T1H 7
-  #define DELAY_800_T1L  2
+  #define DELAY_800_T0H  1
+  #define DELAY_800_T0L  4
+  #define DELAY_800_T1H 6
+  #define DELAY_800_T1L  1
+
   #define SET_HI    (PIN_MAP[pin].gpio_device->regs->BSRR = (1U << PIN_MAP[pin].gpio_bit) << (16 *  ((uint8_t)!1)) );
   #define SET_LO   (PIN_MAP[pin].gpio_device->regs->BSRR = (1U << PIN_MAP[pin].gpio_bit) << (16 *  ((uint8_t)!0)) );
 
@@ -100,7 +101,10 @@ void Adafruit_NeoPixel::show(void) {
   if((type & NEO_SPDMASK) == NEO_KHZ800) { // 800 KHz bitstream
     while(p < end) {
       pix = *p++;
+//uint32_t start = 0;
+//uint32_t end = 0;
       for(mask = 0x80; mask; mask >>= 1) {
+//start = micros();
         SET_HI
         if(pix & mask) {
           delayShort(DELAY_800_T1H);
@@ -111,6 +115,8 @@ void Adafruit_NeoPixel::show(void) {
           SET_LO
           delayShort(DELAY_800_T0L);
         }
+//end = micros();
+//Serial.print("Time:");Serial.println(end-start);
       }
     }
   } else { // 400 kHz bitstream
